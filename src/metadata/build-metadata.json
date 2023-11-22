@@ -6,10 +6,10 @@
       "description": "No input is required for the update.",
       "inputs": [
         {
-          "internalType": "uint256",
-          "name": "number",
-          "type": "uint256",
-          "description": "Number used for storage"
+          "internalType": "address",
+          "name": "asset",
+          "type": "address",
+          "description": "Base asset for the Vault"
         }
       ]
     },
