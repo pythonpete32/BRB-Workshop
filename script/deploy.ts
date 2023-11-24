@@ -96,6 +96,10 @@ async function main() {
           });
           break;
       }
+
+      console.log(
+        `https://app.aragon.org/#/daos/goerli/${DAOName}.dao.eth/dashboard`
+      );
     } catch (err) {
       console.error(err);
     }
