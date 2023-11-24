@@ -20,6 +20,7 @@ contract VaultPlugin is PluginUUPSUpgradeable, ERC4626Upgradeable {
     function initialize(IDAO _dao, IERC20MetadataUpgradeable _asset) external initializer {
         __PluginUUPSUpgradeable_init(_dao);
         __ERC4626_init(_asset);
+        isPaused = false;
     }
 
     function totalAssets() public view virtual override returns (uint256) {
