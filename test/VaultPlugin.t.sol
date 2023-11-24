@@ -5,51 +5,55 @@ import {DAO} from "@aragon/osx/core/dao/DAO.sol";
 
 import {DaoUnauthorized} from "@aragon/osx/core/utils/auth.sol";
 import {AragonTest} from "./base/AragonTest.sol";
-import {MyPluginSetup} from "../src/MyPluginSetup.sol";
-import {MyPlugin} from "../src/MyPlugin.sol";
+import {VaultPluginSetup} from "../src/VaultPluginSetup.sol";
+import {VaultPlugin} from "../src/VaultPlugin.sol";
+import {MockToken} from "./mocks/MockToken.sol";
+import {IERC20MetadataUpgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol";
 
-abstract contract MyPluginTest is AragonTest {
+abstract contract VaultPluginTest is AragonTest {
     DAO internal dao;
-    MyPlugin internal plugin;
-    MyPluginSetup internal setup;
-    uint256 internal constant NUMBER = 420;
+    VaultPlugin internal plugin;
+    VaultPluginSetup internal setup;
+    MockToken internal DAI;
 
     function setUp() public virtual {
-        setup = new MyPluginSetup();
-        bytes memory setupData = abi.encode(NUMBER);
+        setup = new VaultPluginSetup();
+        DAI = new MockToken("DAI Coin", "DAI");
+        bytes memory setupData = abi.encode(DAI);
 
         (DAO _dao, address _plugin) = createMockDaoWithPlugin(setup, setupData);
 
         dao = _dao;
-        plugin = MyPlugin(_plugin);
+        plugin = VaultPlugin(_plugin);
     }
 }
 
-contract MyPluginInitializeTest is MyPluginTest {
+contract VaultPluginInitializeTest is VaultPluginTest {
     function setUp() public override {
         super.setUp();
     }
 
     function test_initialize() public {
         assertEq(address(plugin.dao()), address(dao));
-        assertEq(plugin.number(), NUMBER);
+        assertEq(plugin.asset(), address(DAI));
     }
 
     function test_reverts_if_reinitialized() public {
         vm.expectRevert("Initializable: contract is already initialized");
-        plugin.initialize(dao, 69);
+        plugin.initialize(dao, IERC20MetadataUpgradeable(address(DAI)));
     }
 }
 
-contract MyPluginStoreNumberTest is MyPluginTest {
+contract VaultPluginPauseTest is VaultPluginTest {
     function setUp() public override {
         super.setUp();
     }
 
-    function test_store_number() public {
+    function test_pause() public {
         vm.prank(address(dao));
-        plugin.storeNumber(69);
-        assertEq(plugin.number(), 69);
+
+        plugin.togglePause();
+        assertEq(plugin.isPaused(), true);
     }
 
     function test_reverts_if_not_auth() public {
@@ -60,9 +64,9 @@ contract MyPluginStoreNumberTest is MyPluginTest {
                 dao,
                 plugin,
                 address(this),
-                keccak256("STORE_PERMISSION")
+                keccak256("PAUSE_PERMISSION")
             )
         );
-        plugin.storeNumber(69);
+        plugin.togglePause();
     }
 }
